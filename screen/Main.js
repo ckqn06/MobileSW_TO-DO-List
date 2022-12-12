@@ -1,62 +1,25 @@
-import { KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Alert,
-    ScrollView, View, Button, Image, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { Alert, BackHandler, ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useEffect, useState } from 'react'
 import { db }  from '../firebaseConfig';
 import { 
   addDoc, 
   collection, 
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,  
-  where,
-  query } from "firebase/firestore"; 
+  getDocs } from "firebase/firestore"; 
   
-const Main = () => {
+const Main = ({navigation}) => {
   const [addTask, setAddTask] = useState('');
-  const [addAge, setAddAge] = useState('');
-  const [id, setID] = useState('');
   const [users, setUsers] = useState();
 
-  function changeID() { setID('') }
-  useEffect(()=>{changeID()})
-
-  const updateDB = async ()=>{
-    try{
-      const docRef = doc(db, "Task", id);
-      await updateDoc(docRef, {
-        addTask: addTask,
-        addAge: addAge
-      });
-      alert("Updated!!")
-      readfromDB()
-    }catch(error){
-      console.log(error.message)
-    }
-  }
-
-  const queryDB = async ()=>{
-    try{
-      const q = await query(collection(db, "Task" ), where('addTask',"==","test23"))
-      const singleDoc = await getDocs(q);
-      console.log(singleDoc)
-    }catch(error){
-      console.log(error.message)
-    }
-  }
-
-  const addtoDB = async ()=>{
+  const addtoDB = async () => {
     try{
       if ( addTask=="" ) { Alert.alert("주의!", "내용을 적어주세요!", [{ text:"예" }]) }
       else {
         await addDoc(collection(db, "Task"), {
           addTask: addTask,
-          addAge: addAge,
           createdAt: new Date(),
         });
         alert("TO-DO List에 추가했습니다.")
         setAddTask("")
-        setAddAge("")
         readfromDB()
       }
     }catch(error){
@@ -73,97 +36,57 @@ const Main = () => {
     }
   }
 
-  const deletefromDB = async ()=>{
-    try{
-      const docRef = doc(db, "Task", id);
-      await deleteDoc(docRef);
-      alert("Deleted!!")
-      readfromDB()
-    }catch(error){
-      console.log(error.message)
-    }
-  }
+  useEffect(() => { readfromDB(); }, [])
+
+  useEffect(() => {
+    const backAction = () => { Alert.alert("알림", "정말로 앱을 종료하시겠습니까?",
+      [{ text:"아니오", onPress: () => null, style:'cancel' },
+       { text:"예", onPress: () => { BackHandler.exitApp() }}]);
+       return true; };
+
+    const backHandler = BackHandler.addEventListener( "hardwareBackPress", backAction );
+    return () => backHandler.remove() 
+  }, [])
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.mainView}> 
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
+    <View style={styles.mainView}>
+      <Text style={styles.mainText}>해야 할 일을 TO-DO List에 추가하기</Text>
+
+      <View style = {{flexDirection:'row', alignItems:'center', marginTop:20}}>
+        <TextInput
+          style = {styles.textInput}
+          value={addTask}
+          onChangeText={setAddTask}
+          placeholder="+ 해야 할 일을 여기다 적어보세요!"/>
+        <TouchableOpacity onPress = {addtoDB}>
+          <View style = {styles.addButton}>
+            <Text style = {{fontSize:20}}>+</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{alignItems:'flex-end', marginTop:30, marginRight:20}}>
+        <TouchableOpacity onPress = {readfromDB}>
+          <View style = {styles.readButton}>
+            <Text style = {{fontSize:14, fontWeight:'bold'}}>새로고침</Text>
+          </View>
+        </TouchableOpacity>   
+      </View>             
+
+      <View style={styles.subView}>
         <ScrollView style ={{width:"100%"}}>
-          <View style={styles.mainView}>
-            <Text style={styles.mainText}>해야 할 일을 TO-DO List에 추가하기</Text>
-
-            <View style = {{flexDirection:'row', alignItems:'center', marginTop:20}}>
-              <TextInput
-                style = {styles.textInput}
-                value={addTask}
-                onChangeText={setAddTask}
-                placeholder="+ 해야 할 일을 여기다 적어보세요!"/>
-              <TouchableOpacity onPress = {addtoDB}>
-                <View style = {styles.button}>
-                  <Text style = {styles.buttonText}>+</Text>
+          {users?.map((item, index) => {
+            return (
+              <TouchableOpacity onPress={() => { navigation.navigate('Task', { id: item.id, task: item.addTask })}}>
+                <View style={styles.task}>
+                  <Text style={{marginRight:10, fontSize:20, fontWeight:'bold'}}>#{index+1}</Text>
+                  <Text style={{marginRight:40, fontSize:20}} numberOfLines={1} ellipsizeMode="tail">{item.addTask}</Text>
                 </View>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{alignItems:'flex-end', marginTop:30, marginRight:20}}>
-            <TouchableOpacity onPress = {readfromDB}>
-                <View style = {styles.readButton}>
-                  <Text style = {{fontSize:14, fontWeight:'bold'}}>TO-DO List 불러오기</Text>
-                </View>
-            </TouchableOpacity>   
-            </View>         
-
-            <View style={styles.subView}>
-                {users?.map((row, idx) => {
-                  return (
-                    <View style={styles.task}>
-                      <Text style={{marginRight:10, fontSize:20, fontWeight:'bold'}}>#{idx+1}</Text>
-                      <Text style={{fontSize:20}}>{row.addTask}</Text>
-                      <Text>{row.id}</Text>
-                      <TouchableOpacity onPress={deletefromDB}>
-                          <Image
-                            style = {{width:35, height:35}}
-                            source = {require('../assets/Image/trash-can.png')}
-                            resizeMode = "contain"/>
-                      </TouchableOpacity>   
-                    </View> ); })}
-            </View>
-
-            <View style={styles.subView}>
-                        <TextInput
-                            placeholder="name"
-                            value={addTask}
-                            onChangeText={setAddTask}/>
-                        <TextInput
-                            placeholder="age"
-                            value={addAge}
-                            onChangeText={setAddAge}/>
-
-                        <Button title="Update Text" onPress={updateDB} />
-                        <TextInput
-                            placeholder="Updata ID"
-                            value={id}
-                            onChangeText={setID}/>
-                        <TextInput
-                            placeholder="name"
-                            value={addTask}
-                            onChangeText={setAddTask}/>
-                        <TextInput
-                            placeholder="age"
-                            value={addAge}
-                            onChangeText={setAddAge}/>
-      
-                        <Button title="Delete Text" onPress={deletefromDB} />
-                        <TextInput
-                            placeholder="Delete ID"
-                            value={id}
-                            onChangeText={setID}/>
-                    </View>
-                </View>
+              </TouchableOpacity>   
+            ); })}
         </ScrollView>
-      </TouchableWithoutFeedback> 
-    </KeyboardAvoidingView>
+      </View>      
+    </View>
   );
 }
 
@@ -173,6 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor:'#F6F8FA',
   },
   subView: {
+    flex:1,
     margin:15,
     backgroundColor:'#FFFFFF',
     borderWidth:3,
@@ -198,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor:'white'
   },
 
-  button: {
+  addButton: {
     alignItems:'center',
     justifyContent:'center',
     width:40,
@@ -212,9 +136,6 @@ const styles = StyleSheet.create({
     padding:10,
     borderRadius:10,
     backgroundColor:'#FFC72C' 
-  },
-  buttonText: {
-    fontSize:20,
   },
 
   task: {
