@@ -1,21 +1,15 @@
-import { Alert, ScrollView, View, Button, Image, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { useEffect, useState } from 'react'
+import { Alert, ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { useState } from 'react'
 import { db }  from '../firebaseConfig';
 import { 
-addDoc, 
-collection, 
-getDocs,
-doc,
-updateDoc,
-deleteDoc,  
-where,
-query } from "firebase/firestore"; 
+  doc,
+  updateDoc,
+  deleteDoc } from "firebase/firestore"; 
   
 const Task = ({route}) => {
   const {id} = route.params;
   const {task} = route.params;
   const [update, setUpdate] = useState(task);
-  const [users, setUsers] = useState();
   const [show, setShow] = useState(true); 
 
   const updateDB = async ()=>{
@@ -55,7 +49,7 @@ const Task = ({route}) => {
           <ScrollView style ={{width:"100%"}}>
             <View style={{alignItems:'center', marginLeft:20, marginRight:20}}>
               <Text style={styles.header}>== 해야 할 일 ==</Text>
-              <Text style={{marginTop:10, marginBottom:30, fontSize:20}}>{update}</Text>
+              <Text style={{marginTop:10, marginBottom:30, fontSize:20}}>{task}</Text>
 
               <Text style={styles.header}>== 내용 수정하기 ==</Text>
               <TextInput
