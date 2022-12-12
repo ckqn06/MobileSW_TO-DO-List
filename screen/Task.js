@@ -4,14 +4,16 @@ import { db }  from '../firebaseConfig';
 import { 
   doc,
   updateDoc,
-  deleteDoc } from "firebase/firestore"; 
+  deleteDoc } from "firebase/firestore"; //firebase에 데이터를 수정 및 삭제하기 위해 불러온다.
   
 const Task = ({route}) => {
-  const {id} = route.params;
-  const {task} = route.params;
-  const [update, setUpdate] = useState(task);
-  const [show, setShow] = useState(true); 
+  const {id} = route.params; //선택한 할 일의 고유 데이터베이스 ID를 저장하기 위한 변수
+  const {task} = route.params; //선택한 할 일의 내용을 저장하기 위한 변수
+  const [update, setUpdate] = useState(task); //선택한 할 일의 수정할 내용을 저장하기 위한 변수
+  const [show, setShow] = useState(true); //특정 상황에서 숨겨진 컴포넌트를 보여주기 위한 변수
 
+  //사용자가 적은 내용을 데이터베이스에 존재하는 데이터의 내용에서 수정하는 함수
+  //사용자가 아무 내용도 적지 않았거나 이미 삭제된 데이터를 수정하려 하면 경고문을 출력한다.
   const updateDB = async ()=>{
     try{
       if(show == false) { Alert.alert("주의!", "이미 삭제된 일입니다.", [{ text:"예" }]) }
@@ -28,6 +30,8 @@ const Task = ({route}) => {
     }
   }
 
+  //데이터베이스 내에서 사용자가 선택한 할 일을 삭제하는 함수 
+  //이미 삭제된 데이터를 삭제하려 하면 경고문을 출력한다.
   const deletefromDB = async ()=>{
     try{
       if(show == false) { Alert.alert("주의!", "이미 삭제된 일입니다.", [{ text:"예" }]) }
@@ -44,6 +48,10 @@ const Task = ({route}) => {
 
   return (
     <View style={styles.mainView}>
+
+      {/* 사용자가 선택한 할 일의 세부 사항을 출력한다.
+          textInput에 내용을 입력하고 '수정적용' button을 누르면 내용이 수정된다. */}
+      {/* 사용자가 '삭제하기' button을 누르면 세부 사항에 관한 내용을 숨기고 삭제됐다는 text를 출력한다. */}  
       {show ? (
         <View style={styles.subView}>
           <ScrollView style ={{width:"100%"}}>
@@ -68,6 +76,7 @@ const Task = ({route}) => {
           </ScrollView>
         </View> }
           
+      {/* 사용자가 적은 내용을 데이터베이스에 존재하는 데이터의 내용에서 수정하는 함수 */}
       <View style={{flexDirection:'row', marginTop:30}}>
         <TouchableOpacity onPress = {updateDB}>
           <View style = {styles.tabButton}>
@@ -75,6 +84,7 @@ const Task = ({route}) => {
           </View>
       </TouchableOpacity>
 
+      {/* 데이터베이스 내에서 사용자가 선택한 할 일을 삭제하는 버튼 */}
       <TouchableOpacity onPress = {deletefromDB}>
         <View style = {styles.tabButton}>
           <Text style = {{fontSize:20, fontWeight:'bold'}}>삭제하기</Text>
@@ -86,11 +96,11 @@ const Task = ({route}) => {
 }
 
 const styles = StyleSheet.create({
-  mainView: {
+  mainView: { //화면 전체를 위한 view의 스타일
     flex:1,
     backgroundColor:'#F6F8FA',
   },
-  subView: {
+  subView: { //할 일의 정보를 위한 view의 스타일
     flex:1,
     marginTop:35,
     marginLeft:15,
@@ -101,12 +111,12 @@ const styles = StyleSheet.create({
     borderColor:'black'
   },
   
-  header: {
+  header: { //글의 구간을 나누는 text의 스타일
     marginTop:15,
     fontSize:20,
     fontWeight:'bold'
   },
-  textInput: {
+  textInput: { //할 일의 내용을 수정하기 위한 textInput의 스타일
     width:'90%',
     height:40,
     marginTop:15,
@@ -118,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor:'white'
   },
 
-  tabButton: {
+  tabButton: { //하단에 존재하는 button의 스타일
     alignItems:'center',
     justifyContent:'center',
     width:180,
